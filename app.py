@@ -20,19 +20,17 @@ def get_className(classNo):
 	print(classNo)
 	print(classNo[0])
 	if classNo[0][0]<1:
-		return "Yes Brain Tumor"
+		return "This is a Brain Tumor"
 	else:
-		return "No Brain Tumor"
+		return "This is not a Brain Tumor"
 
 
 def getResult(img):
-    image=cv2.imread(img)
-    image = Image.fromarray(image, 'RGB')
-    image = image.resize((64, 64))
-    image=np.array(image)
-    input_img = np.expand_dims(image, axis=0)
-    #result=model.predict_classes(input_img)
-    result=model.predict(input_img)
+    img = Image.open(image)
+    img = img.resize((64, 64))
+    img = np.array(img) / 255.0  # Chuẩn hóa ảnh
+    img = np.expand_dims(img, axis=0)
+    result = model.predict(img)
     return result
 
 
@@ -44,17 +42,19 @@ def index():
 @app.route('/predict', methods=['GET', 'POST'])
 def upload():
     if request.method == 'POST':
-        f = request.files['file']
+        file = request.files['file']
 
-        basepath = os.path.dirname(__file__)
-        file_path = os.path.join(
-            basepath, 'uploads', secure_filename(f.filename))
-        f.save(file_path)
-        value=getResult(file_path)
-        result=get_className(value) 
-        return result
+        if file:
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+
+            value = getResult(filepath)
+            result = get_className(value)
+            os.remove(filepath) # remove the file after processing
+            return result
+
     return None
-
 
 if __name__ == '__main__':
     app.run(debug=True)

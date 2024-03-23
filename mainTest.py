@@ -15,9 +15,8 @@ img=np.array(img)
 
 input_img=np.expand_dims(img, axis=0)
 
-result=model.predict_classes(input_img)
+result=model.predict(input_img)
+
 print(result)
-
-
 
 
