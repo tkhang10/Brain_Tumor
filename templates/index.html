@@ -22,8 +22,11 @@
     <div class="loader" style="display:none;"></div>
 
     <h3 id="result">
-        <span> </span>
+        <span>{{ result }}</span>
     </h3>
+    {% if image_path %}
+    <img src="{{ url_for('upload', filename=image_with_tumor_path) }}" alt="Image">
+    {% endif %}
 
 
 </center><br><br>
