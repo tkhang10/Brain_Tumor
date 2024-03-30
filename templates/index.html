@@ -1,32 +1,66 @@
 {% extends "import.html" %} 
 {% block content %}
+    <center>
+        <br><h2>Brain Tumor</h2><br>
 
-<center>
-<br><h2>Brain Tumor</h2><br>
+        <form id="upload-file" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" class="btn btn-success" id="imageUpload" accept=".png, .jpg, .jpeg">
+        </form>
 
-    <form id="upload-file" method="post" enctype="multipart/form-data">
-         <input type="file" name="file" class="btn btn-success" id="imageUpload" accept=".png, .jpg, .jpeg">
-    </form>
+        <div class="image-section" style="display:none;">
+            <img id="imagePreview" class="img-responsive" src="#" style="width:300px;height:300px;"/><br><br>
+            <div>
+                <button type="button" class="btn btn-info btn-lg" id="btn-predict"> Predict! </button>
+            </div>
+        </div>
 
+        <div class="loader" style="display:none;"></div>
 
+        <h3 id="result">
+            <span id="resultSpan"></span>
+        </h3>
+        <div class="image-after" style="display:none;">
+            <img id="imageAfter" class="img-responsive" src="" style="width:300px;height:300px;"/>
+        </div>
+    </center><br><br>
+{% endblock %}
 
-    <div class="image-section" style="display:none;">
-         <img id="imagePreview"  class="img-responsive" src="#" style="width:300px;height:300px;"/><br><br>
-         <div>
-            <button type="button" class="btn btn-info btn-lg " id="btn-predict">Predict!</button>
-         </div>
-    </div>
+{% block scripts %}
+<script>
+    document.getElementById('btn-predict').addEventListener('click', function() {
+        predict();
+    });
 
+    function predict() {
+        document.querySelector('.image-section').style.display = 'block';
+        document.querySelector('.image-after').style.display = 'none';
+        document.querySelector('.loader').style.display = 'block';
 
+        var formData = new FormData();
+        formData.append('file', document.getElementById('imageUpload').files[0]);
 
-    <div class="loader" style="display:none;"></div>
+        fetch('/predict', {
+            method: 'POST',
+            body: formData
+        })      
+        .then(data => {
+            console.log(data.json());
+            // Update the result
+            document.getElementById('resultSpan').textContent = data.result;
 
-    <h3 id="result">
-        <span>{{ result }}</span>
-    </h3>
-    <img src="" alt="Processed Image" style="width:300px;height:300px;">
+            // Display the image after prediction
+            if (data.image_path) {
+                document.getElementById('imageAfter').src = data.image_path;
+                document.querySelector('.image-after').style.display = 'block';
 
+                // Once the image is loaded, display the image-section
+                document.querySelector('.image-section').style.display = 'block';
 
-
-</center><br><br>
+                // Hide the loader
+                document.querySelector('.loader').style.display = 'none';
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+</script>
 {% endblock %}

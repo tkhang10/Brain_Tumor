@@ -5,7 +5,7 @@ import cv2
 from tensorflow.keras.preprocessing import image
 from PIL import Image
 from keras.models import load_model
-from flask import Flask, request, render_template, send_from_directory
+from flask import Flask, request, render_template, send_from_directory, url_for, jsonify
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -60,10 +60,10 @@ def upload():
     file = request.files['file']
 
     if not file:
-        return 'No file specified.'
+        return jsonify({'error': 'No file specified.'})
 
     if not allowed_file(file.filename):
-        return 'Invalid file extension. Only PNG, JPG, and JPEG are allowed.'
+        return jsonify({'error': 'Invalid file extension. Only PNG, JPG, and JPEG are allowed.'})
 
     filename = secure_filename(file.filename)
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -76,34 +76,42 @@ def upload():
     # Get prediction result
     value = get_result(filepath)
     result = get_class_name(value)
-    
-    if result == "This is a Brain Tumor":
 
+    if result == "This is a Brain Tumor":
         # Load the image to draw tumor box
         image = cv2.imread(filepath)
 
         # Example coordinates of the tumor box
-        box_coordinates = (100,100,200,200)
+        box_coordinates = (100, 100, 200, 200)
 
         # Draw tumor box on the image
         image_with_tumor = draw_tumor_box(image.copy(), box_coordinates)
-
+        
         # Save the image with tumor box
         new_filename = 'colorize_' + secure_filename(file.filename)
         image_with_tumor_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
         cv2.imwrite(image_with_tumor_path, image_with_tumor)
 
-        # Remove the uploaded file after processing (optional)
-        # os.remove(filepath)
+        # Convert the path to HTML URL format
+        image_with_tumor_url = url_for('uploaded_file', filename=new_filename)
 
-        # Return the result and the image
-        return render_template('index.html', result=result, image_path=image_with_tumor_path)
-    
+        # Remove the leading "/" from the URL if present
+        if image_with_tumor_url.startswith("/"):
+            image_with_tumor_url = image_with_tumor_url[1:]
+
+        # Create the JSON response
+        response = {
+            'result': result,
+            'image_path': image_with_tumor_url
+        }
     else:
         # Return only the result
-        return result
-    
+        response = {
+            'result': result
+        }
 
+    print(response)
+    return jsonify(response)
     
 if __name__ == '__main__':
     app.run(debug=True)
