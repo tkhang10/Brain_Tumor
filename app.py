@@ -94,6 +94,7 @@ def upload():
 
         # Convert the path to HTML URL format
         image_with_tumor_url = url_for('uploaded_file', filename=new_filename)
+        # image_with_tumor_url = image_with_tumor_url.replace('/', '\\')
 
         # Remove the leading "/" from the URL if present
         if image_with_tumor_url.startswith("/"):

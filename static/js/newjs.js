@@ -1,17 +1,22 @@
 $(document).ready(function () {
-    // Init
+    // Hide elements when the page is loaded
     $('.image-section').hide();
+    $('.image-after').hide();
     $('.loader').hide();
     $('#result').hide();
+
+    // Function to read the URL of the image and preview before upload
     function readURL(input) {
         if (input.files && input.files[0]) {
             var reader = new FileReader();
             reader.onload = function (e) {
-                $('#imagePreview').attr( 'src', e.target.result );
+                $('#imagePreview').attr('src', e.target.result);
             }
             reader.readAsDataURL(input.files[0]);
         }
     }
+
+    // Handle event when the upload file changes
     $("#imageUpload").change(function () {
         $('.image-section').show();
         $('#btn-predict').show();
@@ -19,15 +24,16 @@ $(document).ready(function () {
         $('#result').hide();
         readURL(this);
     });
-    // Predict
+
+    // Handle event when the "Predict" button is clicked
     $('#btn-predict').click(function () {
         var form_data = new FormData($('#upload-file')[0]);
 
-        // Show loading animation
+        // Hide the Predict button and show the loader
         $(this).hide();
         $('.loader').show();
 
-        // Make prediction by calling api /predict
+        // Make a call to the /predict API
         $.ajax({
             type: 'POST',
             url: '/predict',
@@ -37,12 +43,25 @@ $(document).ready(function () {
             processData: false,
             async: true,
             success: function (data) {
-                // Get and display the result
+                // Hide the loader and show the result
                 $('.loader').hide();
                 $('#result').fadeIn(600);
-                $('#result').text(' Result:  ' + data);
+                $('#result').text(' Result:  ' + data.result);
+
+                // Update the image path
+                loadImageSrc(data.image_path);
+                $('.image-after').show(); // Show the image section
+
                 console.log('Success!');
+                console.log(data.result);
+                console.log(data.image_path);
             },
         });
     });
+
+    // Function to update the image path
+    function loadImageSrc(src) {
+        var imageElement = document.getElementById('imageAfter');
+        imageElement.setAttribute('src', src);
+    }
 });
